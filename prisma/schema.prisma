@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User roles enum
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+// Book status enum
+enum BookStatus {
+  AVAILABLE
+  BORROWED
+}
+
+// Borrow status enum
+enum BorrowStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+// User model
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  firstName    String
+  lastName     String
+  role         UserRole  @default(STUDENT)
+  studentId    String?   @unique
+  phone        String?
+  address      String?
+  dateOfBirth  DateTime?
+  registeredAt DateTime  @default(now())
+  isActive     Boolean   @default(true)
+  refreshToken String?
+
+  // Relations
+  borrows Borrow[] // Books borrowed by this user
+  fines   Fine[]
+  reviews Review[]
+
+  @@index([email])
+  @@index([studentId])
+  @@index([role])
+}
+
+// Category model
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  books Book[]
+}
+
+// Author model
+model Author {
+  id        String   @id @default(cuid())
+  name      String
+  biography String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  books BookAuthor[]
+
+  @@index([name])
+}
+
+// Book model
+model Book {
+  id              String     @id @default(cuid())
+  isbn            String     @unique
+  title           String
+  subtitle        String?
+  description     String?
+  edition         String?
+  pages           Int?
+  coverImage      String?
+  totalCopies     Int        @default(1)
+  availableCopies Int        @default(1)
+  status          BookStatus @default(AVAILABLE)
+  viewCount       Int        @default(0) // Track book detail page views
+  borrowCount     Int        @default(0) // Total times borrowed (all-time)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Foreign Keys
+  categoryId String
+
+  // Relations
+  category  Category     @relation(fields: [categoryId], references: [id])
+  authors   BookAuthor[]
+  borrows   Borrow[]
+  reviews   Review[]
+  bookViews BookView[] // Track individual view events
+
+  @@index([isbn])
+  @@index([title])
+  @@index([categoryId])
+  @@index([status])
+}
+
+// Many-to-Many relationship between Books and Authors
+model BookAuthor {
+  id       String @id @default(cuid())
+  bookId   String
+  authorId String
+
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, authorId])
+  @@index([bookId])
+  @@index([authorId])
+}
+
+// Borrow model - Created by LIBRARIAN when student comes to library
+model Borrow {
+  id           String       @id @default(cuid())
+  borrowDate   DateTime     @default(now())
+  dueDate      DateTime
+  returnDate   DateTime?
+  status       BorrowStatus @default(ACTIVE)
+  overdueNotified Boolean @default(false)
+  renewalCount Int          @default(0)
+  notes        String? // Librarian notes
+
+  // Foreign Keys
+  userId       String // Student who borrowed
+  bookId       String
+  returnedById String? // Librarian who processed return
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id])
+  book  Book   @relation(fields: [bookId], references: [id])
+  fines Fine[]
+
+  @@index([userId])
+  @@index([bookId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// Fine model - Managed by LIBRARIAN
+model Fine {
+  id         String    @id @default(cuid())
+  amount     Float
+  reason     String // "Late return", "Damaged book", "Lost book"
+  isPaid     Boolean   @default(false)
+  issuedDate DateTime  @default(now())
+  paidDate   DateTime?
+  issuedById String? // Librarian who issued fine
+
+  // Foreign Keys
+  userId   String
+  borrowId String?
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id])
+  borrow Borrow? @relation(fields: [borrowId], references: [id])
+
+  @@index([userId])
+  @@index([isPaid])
+  @@index([borrowId])
+}
+
+// Review model - Students can review from CLIENT SIDE
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int? // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  userId String
+  bookId String
+
+  //Self-lookup
+  parentReviewId String?
+  parentReview Review? @relation("replies", fields: [parentReviewId], references: [id], onDelete: Cascade)
+  subReviews Review[] @relation("replies")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+
+
+  @@index([bookId])
+  @@index([rating])
+}
+
+// Activity Log - Track all librarian actions
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String // "ISSUE_BOOK", "RETURN_BOOK", "ADD_FINE", etc.
+  description String
+  userId      String? // User affected by action
+  librarianId String // Librarian who performed action
+  createdAt   DateTime @default(now())
+
+  @@index([librarianId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// BookView model - Track when users view book details
+model BookView {
+  id        String   @id @default(cuid())
+  viewedAt  DateTime @default(now())
+  ipAddress String? // Optional: track unique views
+  userAgent String? // Optional: track device/browser
+
+  // Foreign Keys
+  bookId String
+  userId String? // Optional: null for anonymous views
+
+  // Relations
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([userId])
+  @@index([viewedAt])
+}
+
+// TrendingBook model - Cache trending books for performance
+model TrendingBook {
+  id             String   @id @default(cuid())
+  bookId         String   @unique
+  trendingScore  Float // Calculated score based on multiple factors
+  weeklyViews    Int      @default(0)
+  weeklyBorrows  Int      @default(0)
+  weeklyReviews  Int      @default(0)
+  averageRating  Float?
+  rank           Int // Position in trending list
+  lastCalculated DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([trendingScore])
+  @@index([rank])
+  @@index([lastCalculated])
+}

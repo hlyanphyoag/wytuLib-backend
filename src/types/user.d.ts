@@ -1,0 +1,15 @@
+export interface User {
+    id: string,
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role: "STUDENT" | "ADMIN",
+    studentId: string,
+    phone: string | null,
+    address: string | null,
+    dateOfBirth: string | null,
+    registeredAt: string,
+    isActive: boolean,
+    refreshToken: string,
+}
