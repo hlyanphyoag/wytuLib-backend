@@ -98,7 +98,8 @@ export class AuthorsService {
                                 id: true,
                                 title: true,
                                 subtitle: true,
-                                coverImage: true
+                                coverImage: true,
+                                coverColor: true
                             }
                         }
                     }

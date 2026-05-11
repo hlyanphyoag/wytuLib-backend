@@ -137,6 +137,7 @@ export class GetUserDetailsResponse extends UserResponseDto {
             subtitle: string;
             isbn: string;
             coverImage: string;
+            coverColor: string;
         };
         borrowDate: Date;
         returnDate: Date;
@@ -144,7 +145,6 @@ export class GetUserDetailsResponse extends UserResponseDto {
         status: BorrowStatus;
     }[];
 }
-
 
 export class UpdateUserDto {
     @ApiProperty({

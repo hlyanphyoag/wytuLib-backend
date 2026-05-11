@@ -114,6 +114,10 @@ export class BorrowBookDto {
   @Expose()
   @ApiProperty({ example: "https://example.com/cover.jpg", required: false })
   coverImage?: string;
+
+  @Expose()
+  @ApiProperty({ example: "https://example.com/cover.jpg", required: false })
+  coverColor?: string;
 }
 
 export class BorrowResponseDto {

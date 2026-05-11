@@ -26,21 +26,11 @@ export class UsersService {
 
 
   async createUser(createUserDto: RegisterDto) {
-    const {
-      email,
-      firstName,
-      lastName,
-      password,
-      studentId,
-    } = createUserDto
+
 
     const user = await this.prisma.user.create({
       data: {
-        email,
-        firstName,
-        lastName,
-        password,
-        studentId,
+        ...createUserDto
       }
     })
     return user
@@ -74,6 +64,7 @@ export class UsersService {
                 subtitle: true,
                 isbn: true,
                 coverImage: true,
+                coverColor: true
               }
             }
           }

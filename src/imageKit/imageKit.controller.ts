@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, FileTypeValidator, HttpStatus, MaxFileSizeValidator, Param, ParseFilePipe, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, HttpStatus, MaxFileSizeValidator, Param, ParseFilePipe, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { ImageKitService } from "./imageKit.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiResponse } from "@nestjs/swagger";
@@ -37,6 +37,30 @@ export class ImageKitController {
         ) file: Express.Multer.File) {
 
         return this.imageKitService.uploadImage(file.buffer, file.originalname, 'wytuLib-images')
+    }
+
+    @Post('upload-file')
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        description: 'File Upload',
+        type: FileUploadDto
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'File uploaded successfully',
+        type: ImageKitUploadResponseDto
+    })
+    @UseInterceptors(FileInterceptor('file'))
+    uploadDownloadFile(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10000000 }),
+                ]
+            })
+        ) file: Express.Multer.File) {
+
+        return this.imageKitService.uploadFile(file.buffer, file.originalname, 'wytuLib-files')
     }
 
     @Delete(':fileId')

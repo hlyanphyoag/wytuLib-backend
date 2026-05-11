@@ -12,6 +12,14 @@ export class ImageKitService {
     ) { }
 
     async uploadImage(file: Buffer, fileName: string, folder: string): Promise<ImageKitUploadResponseDto> {
+        return this.uploadAsset(file, fileName, folder)
+    }
+
+    async uploadFile(file: Buffer, fileName: string, folder: string): Promise<ImageKitUploadResponseDto> {
+        return this.uploadAsset(file, fileName, folder)
+    }
+
+    private async uploadAsset(file: Buffer, fileName: string, folder: string): Promise<ImageKitUploadResponseDto> {
         try {
             const response = await this.imageKit.upload({
                 file,

@@ -8,6 +8,30 @@ export class BooksService {
     private readonly prisma: PrismaService
   ) { }
 
+  private mapBookResponse(book: GetBooksResponseDto) {
+    return {
+      id: book.id,
+      isbn: book.isbn,
+      title: book.title,
+      subtitle: book.subtitle,
+      description: book.description,
+      edition: book.edition,
+      pages: book.pages,
+      coverImage: book.coverImage,
+      coverColor: book.coverColor,
+      downloadLink: book.downloadLink,
+      totalCopies: (book as GetBooksResponseDto & { totalCopies?: number }).totalCopies,
+      availableCopies: (book as GetBooksResponseDto & { availableCopies?: number }).availableCopies,
+      status: book.status,
+      viewCount: book.viewCount,
+      borrowCount: (book as GetBooksResponseDto & { borrowCount?: number }).borrowCount,
+      createdAt: book.createdAt,
+      updatedAt: book.updatedAt,
+      category: book.category,
+      authors: book.authors.map(author => 'author' in author ? author.author : author)
+    }
+  }
+
   async findAll(query: GetBookQueryDto) {
     const {
       page = 1,
@@ -41,6 +65,13 @@ export class BooksService {
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
           { subtitle: { contains: search, mode: 'insensitive' } },
+          {
+            category: {
+              name: {
+                contains: search, mode: 'insensitive'
+              }
+            }
+          },
           {
             authors:
             {
@@ -88,10 +119,7 @@ export class BooksService {
       }
     })
 
-    const result = data.map((book: GetBooksResponseDto) => ({
-      ...book,
-      authors: book.authors.map(author => author.author)
-    }))
+    const result = data.map((book: GetBooksResponseDto) => this.mapBookResponse(book))
 
 
     return {
@@ -136,13 +164,7 @@ export class BooksService {
       throw new NotFoundException('Book not found')
     }
 
-    const authors = [...book.authors.map((a: { author: { id: string, name: string } }) => a.author)]
-
-    return {
-      status: HttpStatus.OK,
-      ...book,
-      authors
-    }
+    return this.mapBookResponse(book as GetBooksResponseDto)
   }
 
   async create(createBookDto: CreateBookDto) {
@@ -182,10 +204,7 @@ export class BooksService {
     })
 
 
-    return {
-      ...book,
-      authors: book.authors.map(a => a.author)
-    }
+    return this.mapBookResponse(book as GetBooksResponseDto)
   }
 
   async updateBook(id: string, updateBookDto: UpdateBookDto) {
@@ -215,10 +234,7 @@ export class BooksService {
       }
     })
 
-    return {
-      ...updatedBook,
-      authors: updatedBook.authors.map(a => a.author)
-    }
+    return this.mapBookResponse(updatedBook as GetBooksResponseDto)
   }
 
   async deleteBook(id: string) {

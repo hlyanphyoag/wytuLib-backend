@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { BookStatus } from "@prisma/client";
 import { Exclude, Type } from "class-transformer";
-import { IsEnum, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString, IsUrl } from "class-validator";
 
 export class CreateBookDto {
     @ApiProperty({
@@ -57,6 +57,23 @@ export class CreateBookDto {
     @IsOptional()
     @IsString()
     coverImage?: string;
+
+    @ApiProperty({
+        example: '#6b4f3a',
+        required: false,
+        nullable: true
+    })
+    @IsOptional()
+    @IsString()
+    coverColor?: string;
+
+    @ApiProperty({
+        example: 'https://example.com/book.pdf',
+        required: false
+    })
+    @IsOptional()
+    @IsUrl()
+    downloadLink?: string;
 
     @ApiProperty({
         example: 10,
@@ -174,6 +191,12 @@ export class GetBooksResponseDto {
     @ApiProperty({ example: 'https://example.com/cover.jpg' })
     coverImage: string;
 
+    @ApiProperty({ example: '#6b4f3a', required: false, nullable: true })
+    coverColor?: string | null;
+
+    @ApiProperty({ example: 'https://example.com/book.pdf', required: false, nullable: true })
+    downloadLink?: string | null;
+
     @ApiProperty({ example: 10 })
     totalCopie: number;
 
@@ -275,6 +298,24 @@ export class UpdateBookDto {
     @IsString()
     @IsOptional()
     coverImage?: string
+
+    @ApiProperty({
+        example: '#6b4f3a',
+        required: false,
+        nullable: true
+    })
+    @IsString()
+    @IsOptional()
+    coverColor?: string | null
+
+    @ApiProperty({
+        example: 'https://example.com/book.pdf',
+        required: false,
+        nullable: true
+    })
+    @IsOptional()
+    @IsUrl()
+    downloadLink?: string | null
 
     @ApiProperty({
         example: 10,

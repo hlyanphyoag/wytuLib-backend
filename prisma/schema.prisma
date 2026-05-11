@@ -88,6 +88,8 @@ model Book {
   edition         String?
   pages           Int?
   coverImage      String?
+  coverColor      String?
+  downloadLink    String?
   totalCopies     Int        @default(1)
   availableCopies Int        @default(1)
   status          BookStatus @default(AVAILABLE)

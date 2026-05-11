@@ -100,6 +100,7 @@ export class BorrowsService {
                         title: true,
                         subtitle: true,
                         coverImage: true,
+                        coverColor: true
                     }
                 },
                 user: {
@@ -147,6 +148,7 @@ export class BorrowsService {
                         title: true,
                         subtitle: true,
                         coverImage: true,
+                        coverColor: true
                     }
                 },
                 user: {
