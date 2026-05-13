@@ -12,12 +12,13 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 COPY package*.json ./
+# remove --production
 RUN npm ci 
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-#Important
+#Important this lines
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
