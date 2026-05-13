@@ -5,6 +5,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:20-alpine AS production
@@ -19,5 +20,5 @@ COPY --from=builder /app/prisma ./prisma
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-EXPOSE 3000
+EXPOSE 5000
 CMD ["node", "dist/main.js"]
