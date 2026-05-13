@@ -42,9 +42,12 @@ jobs:
 
             docker compose pull app
 
-            docker compose run --rm app \
-              npx prisma migrate deploy
+            docker compose up -d db
 
-            docker compose up -d --no-deps app
+            docker compose up -d app
+
+            sleep 10
+
+            docker compose exec -T app npx prisma migrate deploy
 
             docker image prune -f
