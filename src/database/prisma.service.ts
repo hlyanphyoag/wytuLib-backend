@@ -1,60 +1,32 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
-
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 
 @Injectable()
-export class PrismaService implements OnModuleInit, OnModuleDestroy {
-    private prisma;
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  constructor() {
+    const connectionString = process.env.DATABASE_URL;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    if (!connectionString) {
+      throw new Error('DATABASE_URL is not defined');
     }
 
-    async onModuleInit() {
-        await this.prisma.$connect();
-    }
+    const adapter = new PrismaPg({ connectionString });
 
-    async onModuleDestroy() {
-        await this.prisma.$disconnect();
-    }
+    super({ adapter });
+  }
 
-    get user() {
-        return this.prisma.user;
-    }
+  async onModuleInit() {
+    await this.$connect();
+  }
 
-    get book() {
-        return this.prisma.book;
-    }
-
-    get borrow() {
-        return this.prisma.borrow;
-    }
-
-    get fine() {
-        return this.prisma.fine;
-    }
-
-    get review() {
-        return this.prisma.review;
-    }
-
-    get bookAuthor() {
-        return this.prisma.bookAuthor;
-    }
-
-    get author() {
-        return this.prisma.author
-    }
-
-    get category() {
-        return this.prisma.category;
-    }
-
-    get bookView() {
-        return this.prisma.bookView;
-    }
-
-    // Add other models as needed
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
 }
