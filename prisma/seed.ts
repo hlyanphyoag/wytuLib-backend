@@ -12,6 +12,7 @@ async function main() {
     console.log('🌱 Starting database seeding...');
 
     // Clear existing data
+    console.log("Start Seeding")
     console.log('🗑️  Clearing existing data...');
     await prisma.fine.deleteMany();
     await prisma.review.deleteMany();
