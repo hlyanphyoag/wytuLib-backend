@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
-            cd ~/app
+            cd ~/wytuLib-backend
 
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io \
               -u ${{ secrets.LIGHTSAIL_USER }} --password-stdin
