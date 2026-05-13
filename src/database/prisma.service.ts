@@ -1,6 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -10,7 +9,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     private prisma;
 
     constructor() {
-        this.prisma = new PrismaClient({ accelerateUrl: process.env.DATABASE_URL }).$extends(withAccelerate());
+        this.prisma = new PrismaClient();
     }
 
     async onModuleInit() {
