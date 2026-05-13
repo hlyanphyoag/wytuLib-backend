@@ -41,9 +41,7 @@ jobs:
               -u ${{ secrets.LIGHTSAIL_USER }} --password-stdin
 
             docker compose pull app
-
             docker compose up -d db
-
             docker compose up -d app
 
             sleep 10
