@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { BorrowStatus } from "@prisma/client";
 import { PrismaService } from "src/database/prisma.service";
-import { BorrowResponseDto } from "../dto/borrow.dto";
 import { NotificationsService } from "src/notifications/notifications.service";
 import { formatDate } from "src/libs/utils/formatDate";
 
@@ -31,7 +30,7 @@ export class borrowSchedulerService {
     }
 
     async sendOverdueNotifications() {
-        const overdueBorrows: BorrowResponseDto[] = await this.prisma.borrow.findMany({
+        const overdueBorrows = await this.prisma.borrow.findMany({
             where: {
                 status: BorrowStatus.OVERDUE,
                 overdueNotified: false
@@ -60,7 +59,7 @@ export class borrowSchedulerService {
         /* 
             send email implementation
         */
-        overdueBorrows.map(async (item: BorrowResponseDto) => {
+        overdueBorrows.map(async (item) => {
             await this.resendService.sendOverdueEmail({
                 studentName: item.user.firstName + " " + item.user.lastName,
                 email: item.user.email,
@@ -93,7 +92,7 @@ export class borrowSchedulerService {
         console.log("OneDayFrom:", oneDayFromNow)
         console.log("TwoDayFrom:", twoDayFromNow)
 
-        const dueTomorrow: BorrowResponseDto[] = await this.prisma.borrow.findMany({
+        const dueTomorrow = await this.prisma.borrow.findMany({
             where: {
                 status: BorrowStatus.ACTIVE,
                 dueDate: {

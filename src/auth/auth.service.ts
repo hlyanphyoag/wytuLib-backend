@@ -122,6 +122,10 @@ export class AuthService {
       throw new UnauthorizedException()
     }
 
+    if (!user.refreshToken) {
+      throw new UnauthorizedException("Invalid refresh token")
+    }
+
     const isTokenValid = await bcrypt.compare(oldRefreshToken, user.refreshToken)
 
     if (!isTokenValid) {

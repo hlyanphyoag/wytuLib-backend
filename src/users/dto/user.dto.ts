@@ -103,20 +103,20 @@ export class UserResponseDto {
     isActive: boolean;
 
     @Expose()
-    @ApiProperty({ example: 'STU-2024-001' })
-    studentId: string;
+    @ApiProperty({ example: 'STU-2024-001', required: false, nullable: true })
+    studentId?: string | null;
 
     @Expose()
-    @ApiProperty({ example: '+1234567890' })
-    phone: string;
+    @ApiProperty({ example: '+1234567890', required: false, nullable: true })
+    phone?: string | null;
 
     @Expose()
-    @ApiProperty({ example: '123 Main St, New York, NY 10001' })
-    address: string;
+    @ApiProperty({ example: '123 Main St, New York, NY 10001', required: false, nullable: true })
+    address?: string | null;
 
     @Expose()
-    @ApiProperty({ example: '1990-01-15' })
-    dateOfBirth: string;
+    @ApiProperty({ example: '1990-01-15', required: false, nullable: true })
+    dateOfBirth?: Date | null;
 
     @Exclude()
     password: string;
@@ -134,13 +134,13 @@ export class GetUserDetailsResponse extends UserResponseDto {
         book: {
             id: string;
             title: string;
-            subtitle: string;
+            subtitle: string | null;
             isbn: string;
-            coverImage: string;
-            coverColor: string;
+            coverImage: string | null;
+            coverColor: string | null;
         };
         borrowDate: Date;
-        returnDate: Date;
+        returnDate: Date | null;
         dueDate: Date;
         status: BorrowStatus;
     }[];

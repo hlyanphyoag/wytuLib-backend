@@ -83,16 +83,20 @@ export class ReviewsResponseDto {
     @Expose()
     @ApiProperty({
         description: "Rating from 1 to 5 stars",
-        example: 4
+        example: 4,
+        required: false,
+        nullable: true,
     })
-    rating: number
+    rating?: number | null
 
     @Expose()
     @ApiProperty({
         description: "Comment",
-        example: "Great book!"
+        example: "Great book!",
+        required: false,
+        nullable: true,
     })
-    comment?: string
+    comment?: string | null
 
     @Expose()
     @ApiProperty({
@@ -166,7 +170,7 @@ export class UpdateReviewsParamDto {
 export interface ReviewsDataFromDb{
   id: string;
   rating: number | null;
-  comment: string;
+  comment: string | null;
   createdAt: Date;          // or string if your API returns ISO text
   updatedAt: Date;          // same note as above
   userId: string;

@@ -1,6 +1,30 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { AddBookAuthorDto, CreateBookDto, DeleteBookAuthorDto, GetBookQueryDto, GetBooksResponseDto, UpdateBookAuthorBodyDto, UpdateBookAuthorParamDto, UpdateBookDto } from './dto/books.dto';
+import { Prisma } from '@prisma/client';
+
+const bookInclude = {
+  category: {
+    select: {
+      id: true,
+      name: true
+    }
+  },
+  authors: {
+    select: {
+      author: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    }
+  }
+} satisfies Prisma.BookInclude;
+
+type BookWithRelations = Prisma.BookGetPayload<{
+  include: typeof bookInclude;
+}>;
 
 @Injectable()
 export class BooksService {
@@ -8,7 +32,7 @@ export class BooksService {
     private readonly prisma: PrismaService
   ) { }
 
-  private mapBookResponse(book: GetBooksResponseDto) {
+  private mapBookResponse(book: BookWithRelations) {
     return {
       id: book.id,
       isbn: book.isbn,
@@ -20,15 +44,15 @@ export class BooksService {
       coverImage: book.coverImage,
       coverColor: book.coverColor,
       downloadLink: book.downloadLink,
-      totalCopies: (book as GetBooksResponseDto & { totalCopies?: number }).totalCopies,
-      availableCopies: (book as GetBooksResponseDto & { availableCopies?: number }).availableCopies,
+      totalCopies: book.totalCopies,
+      availableCopies: book.availableCopies,
       status: book.status,
       viewCount: book.viewCount,
-      borrowCount: (book as GetBooksResponseDto & { borrowCount?: number }).borrowCount,
+      borrowCount: book.borrowCount,
       createdAt: book.createdAt,
       updatedAt: book.updatedAt,
       category: book.category,
-      authors: book.authors.map(author => 'author' in author ? author.author : author)
+      authors: book.authors.map((author) => author.author)
     }
   }
 
@@ -46,16 +70,18 @@ export class BooksService {
     const skip = (page - 1) * limit
     const take = Number(limit)
 
-    const where = {
+    const where: Prisma.BookWhereInput = {
       ...(status && { status }),
       ...(category && {
         OR: [
           { categoryId: category },
           {
             category: {
-              name: {
-                contains: category,
-                mode: 'insensitive'
+              is: {
+                name: {
+                  contains: category,
+                  mode: Prisma.QueryMode.insensitive
+                }
               }
             }
           }
@@ -63,25 +89,32 @@ export class BooksService {
       }),
       ...(search && {
         OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { subtitle: { contains: search, mode: 'insensitive' } },
+          { title: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { subtitle: { contains: search, mode: Prisma.QueryMode.insensitive } },
           {
             category: {
-              name: {
-                contains: search, mode: 'insensitive'
+              is: {
+                name: {
+                  contains: search,
+                  mode: Prisma.QueryMode.insensitive
+                }
               }
             }
           },
           {
-            authors:
-            {
-              some:
-                { author: { name: { contains: search, mode: 'insensitive' } } }
+            authors: {
+              some: {
+                author: {
+                  is: {
+                    name: { contains: search, mode: Prisma.QueryMode.insensitive }
+                  }
+                }
+              }
             }
           },
-          { description: { contains: search, mode: 'insensitive' } },
-          { edition: { contains: search, mode: 'insensitive' } },
-          { isbn: { contains: search, mode: 'insensitive' } }
+          { description: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { edition: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { isbn: { contains: search, mode: Prisma.QueryMode.insensitive } }
         ],
       })
     }
@@ -99,27 +132,10 @@ export class BooksService {
       orderBy: {
         [sortBy]: sortOrder
       },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        authors: {
-          select: {
-            author: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        }
-      }
+      include: bookInclude
     })
 
-    const result = data.map((book: GetBooksResponseDto) => this.mapBookResponse(book))
+    const result = data.map((book) => this.mapBookResponse(book))
 
 
     return {
@@ -140,31 +156,14 @@ export class BooksService {
       where: {
         id
       },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        authors: {
-          select: {
-            author: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        }
-      }
+      include: bookInclude
     })
 
     if (!book) {
       throw new NotFoundException('Book not found')
     }
 
-    return this.mapBookResponse(book as GetBooksResponseDto)
+    return this.mapBookResponse(book)
   }
 
   async create(createBookDto: CreateBookDto) {
@@ -183,28 +182,10 @@ export class BooksService {
           }
         })
       },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        authors: {
-          select: {
-            author: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        }
-      }
+      include: bookInclude
     })
 
-
-    return this.mapBookResponse(book as GetBooksResponseDto)
+    return this.mapBookResponse(book)
   }
 
   async updateBook(id: string, updateBookDto: UpdateBookDto) {
@@ -214,27 +195,10 @@ export class BooksService {
       data: {
         ...updateBookDto,
       },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        authors: {
-          select: {
-            author: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        }
-      }
+      include: bookInclude
     })
 
-    return this.mapBookResponse(updatedBook as GetBooksResponseDto)
+    return this.mapBookResponse(updatedBook)
   }
 
   async deleteBook(id: string) {

@@ -1,4 +1,5 @@
 import { ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { AuthorDto, AuthorQueryDto, CreateAuthorDto, UpdateAuthorDto } from './dto/authors.dto';
 
@@ -19,13 +20,16 @@ export class AuthorsService {
             throw new ConflictException('Author already exists')
         }
 
-        const author: AuthorDto = await this.prisma.author.create({
+        const author = await this.prisma.author.create({
             data: {
                 ...createAuthorDto
             }
         })
 
-        return author
+        return {
+            ...author,
+            biography: author.biography ?? undefined,
+        }
     }
 
     async findAllAuthor(getAllAuthorParam: AuthorQueryDto) {
@@ -41,12 +45,12 @@ export class AuthorsService {
         const skip = (page - 1) * limit
         const take = Number(limit)
 
-        const where = {
+        const where: Prisma.AuthorWhereInput = {
             ...(search && {
                 OR: [
-                    { id: { contains: search, mode: 'insensitive' } },
-                    { name: { contains: search, mode: 'insensitive' } },
-                    { biography: { contains: search, mode: 'insensitive' } }
+                    { id: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                    { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                    { biography: { contains: search, mode: Prisma.QueryMode.insensitive } }
                 ]
             })
         }
@@ -57,7 +61,7 @@ export class AuthorsService {
         const hasNextPage = page < totalPages
         const hasPreviousPage = page > 1
 
-        const authors: AuthorDto[] = await this.prisma.author.findMany({
+        const authors = await this.prisma.author.findMany({
             where,
             skip,
             take,
@@ -82,7 +86,10 @@ export class AuthorsService {
 
         return {
             metaData,
-            results: authors
+            results: authors.map((author) => ({
+                ...author,
+                biography: author.biography ?? undefined,
+            }))
         }
     }
 
@@ -107,10 +114,15 @@ export class AuthorsService {
             }
         })
 
+        if (!author) {
+            throw new NotFoundException('Author not found')
+        }
+
         const books = author.books.map((book) => book.book)
 
         return {
             ...author,
+            biography: author.biography ?? undefined,
             books
         }
     }
@@ -122,13 +134,16 @@ export class AuthorsService {
 
         if (!author) throw new NotFoundException('Author not found')
 
-        const updateAuthor: AuthorDto = await this.prisma.author.update({
+        const updateAuthor = await this.prisma.author.update({
             where: { id: authorId },
             data: {
                 ...updateAuthorDto
             }
         })
-        return updateAuthor
+        return {
+            ...updateAuthor,
+            biography: updateAuthor.biography ?? undefined,
+        }
     }
 
     async deleteAuthor(authorId: string) {

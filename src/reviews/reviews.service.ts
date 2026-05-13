@@ -1,8 +1,46 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateReviewsDto, CreateReviewsParamDto, GetReviewsQueryDto, ReviewsDataFromDb, ReviewsResponseDto } from './dto/review.dto';
 import { toDto } from 'src/libs/utils/toDto';
 
+const reviewInclude = {
+    user: {
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+        }
+    },
+    subReviews: {
+        take: 2,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                }
+            },
+            _count: {
+                select: {
+                    subReviews: true
+                }
+            }
+        },
+    },
+    _count: {
+        select: {
+            subReviews: true
+        }
+    }
+} satisfies Prisma.ReviewInclude;
+
+type ReviewWithRelations = Prisma.ReviewGetPayload<{
+    include: typeof reviewInclude;
+}>;
 
 @Injectable()
 export class ReviewsService {
@@ -45,10 +83,10 @@ export class ReviewsService {
         const skip = (page - 1) * limit
         const take = Number(limit)
 
-        const where = {
+        const where: Prisma.ReviewWhereInput = {
             bookId,
             parentReviewId: null,
-            ...(search && { comment: { contains: search, mode: 'insensitive' } })
+            ...(search && { comment: { contains: search, mode: Prisma.QueryMode.insensitive } })
         }
 
         const total = await this.prisma.review.count({ where })
@@ -56,46 +94,14 @@ export class ReviewsService {
         const hasNextPage = page < totalPages
         const hasPreviousPage = page > 1
 
-        const data : ReviewsDataFromDb[] = await this.prisma.review.findMany({
+        const data = await this.prisma.review.findMany({
             where,
             skip,
             take,
             orderBy: {
                 ['createdAt']: order
             },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        email: true
-                    }
-                },
-                subReviews: {
-                    take: 2,
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true
-                            }
-                        },
-                        _count: {
-                            select: {
-                                subReviews: true
-                            }
-                        }
-                    },
-                },
-                _count: {
-                    select: {
-                        subReviews: true
-                    }
-                }
-            }
+            include: reviewInclude
         })
 
         const metaData = {
@@ -107,7 +113,7 @@ export class ReviewsService {
             hasPreviousPage,
         }
 
-        const result = data.map(review => {
+        const result = data.map((review: ReviewWithRelations) => {
             return {
                 ...review,
                 subReviews: review.subReviews.length ?

@@ -198,7 +198,7 @@ export class GetBooksResponseDto {
     downloadLink?: string | null;
 
     @ApiProperty({ example: 10 })
-    totalCopie: number;
+    totalCopies: number;
 
     @ApiProperty({ example: BookStatus.AVAILABLE })
     status: BookStatus;

@@ -4,7 +4,7 @@ import { RegisterDto } from 'src/auth/dto/auth.dto';
 import { ChangePasswordDto, GetUserDetailsResponse, GetUsersQueryDto, UpdateUserDto, UserResponseDto } from './dto/user.dto';
 import { toDto } from 'src/libs/utils/toDto';
 import * as bcrypt from 'bcrypt'
-import { BorrowStatus } from '@prisma/client';
+import { BorrowStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -45,7 +45,7 @@ export class UsersService {
   }
 
   async findUserById(id: string) {
-    const user = this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         id
       },
@@ -71,6 +71,11 @@ export class UsersService {
         }
       }
     })
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
     return toDto(GetUserDetailsResponse, user)
   }
 
@@ -107,15 +112,15 @@ export class UsersService {
     const skip = (page - 1) * limit
     const take = Number(limit)
 
-    const where = {
+    const where: Prisma.UserWhereInput = {
       ...(role && { role }),
       ...(search && {
         OR: [
-          { email: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
-          { studentId: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { firstName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { phone: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { studentId: { contains: search, mode: Prisma.QueryMode.insensitive } },
         ],
       })
     }

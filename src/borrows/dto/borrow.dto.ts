@@ -90,12 +90,12 @@ export class BorrowUserDto {
   email: string;
 
   @Expose()
-  @ApiProperty({ example: "123456789" })
-  studentId: string;
+  @ApiProperty({ example: "123456789", required: false, nullable: true })
+  studentId?: string | null;
 
   @Expose()
-  @ApiProperty({ example: "0912345678" })
-  phone: string;
+  @ApiProperty({ example: "0912345678", required: false, nullable: true })
+  phone?: string | null;
 }
 
 export class BorrowBookDto {
@@ -134,8 +134,8 @@ export class BorrowResponseDto {
   dueDate: Date;
 
   @Expose()
-  @ApiProperty({ example: "2023-01-10T00:00:00.000Z", required: false })
-  returnDate?: Date;
+  @ApiProperty({ example: "2023-01-10T00:00:00.000Z", required: false, nullable: true })
+  returnDate?: Date | null;
 
   @Expose()
   @ApiProperty({
@@ -219,6 +219,5 @@ export class BorrowParam {
   @IsString()
   id: string
 }
-
 
 

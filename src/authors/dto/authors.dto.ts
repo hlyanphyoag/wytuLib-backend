@@ -58,10 +58,11 @@ export class AuthorDto {
     @ApiProperty({
         description: "Author biography",
         type: String,
-        required: false
+        required: false,
+        nullable: true,
     })
     @IsString()
-    biography?: string;
+    biography?: string | null;
 
     @ApiProperty({
         description: "Author creation date",

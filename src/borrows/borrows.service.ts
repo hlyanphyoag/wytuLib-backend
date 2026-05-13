@@ -1,8 +1,8 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { BorrowBookDto, BorrowResponseDto, CreateBorrowDto, GetBorrowsParamDto, UpdateBorrowDto } from './dto/borrow.dto';
 import { toDto } from 'src/libs/utils/toDto';
-import { Book, BookStatus, Borrow, BorrowStatus } from '@prisma/client';
+import { BookStatus, Borrow, BorrowStatus, Prisma } from '@prisma/client';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { formatDate } from 'src/libs/utils/formatDate';
 
@@ -57,7 +57,7 @@ export class BorrowsService {
         const skip = (page - 1) * limit;
         const take = Number(limit);
 
-        const where = {
+        const where: Prisma.BorrowWhereInput = {
             ...(userId && { userId }),
             ...(status && { status }),
             ...(borrowDate && { borrowDate }),
@@ -66,20 +66,24 @@ export class BorrowsService {
                 OR: [
                     {
                         book: {
-                            OR: [
-                                { title: { contains: search, mode: 'insensitive' } },
-                                { subtitle: { contains: search, mode: 'insensitive' } }
-                            ]
+                            is: {
+                                OR: [
+                                    { title: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                                    { subtitle: { contains: search, mode: Prisma.QueryMode.insensitive } }
+                                ]
+                            }
                         }
                     },
                     {
                         user: {
-                            OR: [
-                                { firstName: { contains: search, mode: 'insensitive' } },
-                                { lastName: { contains: search, mode: 'insensitive' } },
-                                { email: { contains: search, mode: 'insensitive' } },
-                                { studentId: { contains: search, mode: 'insensitive' } }
-                            ]
+                            is: {
+                                OR: [
+                                    { firstName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                                    { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                                    { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                                    { studentId: { contains: search, mode: Prisma.QueryMode.insensitive } }
+                                ]
+                            }
                         }
                     }
                 ]
@@ -164,6 +168,10 @@ export class BorrowsService {
             }
         })
 
+        if (!borrow) {
+            throw new NotFoundException('Borrow not found')
+        }
+
         return toDto(BorrowResponseDto, borrow)
     }
 
@@ -187,7 +195,7 @@ export class BorrowsService {
             throw new ConflictException("Borrow already exists")
         }
 
-        const bookToBorrow: Book = await this.prisma.book.findUnique({
+        const bookToBorrow = await this.prisma.book.findUnique({
             where: { id: borrowData.bookId },
             select: {
                 id: true,
@@ -195,7 +203,11 @@ export class BorrowsService {
             }
         })
 
-        if (bookToBorrow && bookToBorrow.availableCopies === 0) {
+        if (!bookToBorrow) {
+            throw new NotFoundException('Book not found')
+        }
+
+        if (bookToBorrow.availableCopies === 0) {
             throw new BadRequestException("Book not available for borrow")
         }
 
@@ -233,7 +245,7 @@ export class BorrowsService {
                 availableCopies: {
                     decrement: 1
                 },
-                ...(bookToBorrow && bookToBorrow.availableCopies === 1 && {
+                ...(bookToBorrow.availableCopies === 1 && {
                     status: BookStatus.BORROWED
                 })
             }
@@ -260,6 +272,11 @@ export class BorrowsService {
                 id: borrowId
             }
         })
+
+        if (!existing) {
+            throw new NotFoundException('Borrow not found')
+        }
+
         const borrow = await this.prisma.borrow.update({
             where: { id: borrowId },
             data: {
@@ -307,22 +324,25 @@ export class BorrowsService {
             where: { id: borrowId }
         });
 
-        // console.log("Existing:", existingBorrow.book.)
-        const book = await this.prisma.book.findUnique({
-            where: { id: existingBorrow.bookId }
-        })
-
-        const shouldUpdateStatus = book.status === BookStatus.BORROWED
-
-        console.log("Should update status:", shouldUpdateStatus)
-
         if (!existingBorrow) {
-            throw new Error('Borrow not found');
+            throw new NotFoundException('Borrow not found');
         }
 
         if (existingBorrow.status === BorrowStatus.RETURNED) {
             throw new Error('Book already returned');
         }
+
+        const book = await this.prisma.book.findUnique({
+            where: { id: existingBorrow.bookId }
+        })
+
+        if (!book) {
+            throw new NotFoundException('Book not found')
+        }
+
+        const shouldUpdateStatus = book.status === BookStatus.BORROWED
+
+        console.log("Should update status:", shouldUpdateStatus)
 
         const borrow = await this.prisma.borrow.update({
             where: { id: borrowId },
