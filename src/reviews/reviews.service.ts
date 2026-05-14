@@ -83,7 +83,7 @@ export class ReviewsService {
         const skip = (page - 1) * limit
         const take = Number(limit)
 
-        const where: Prisma.ReviewWhereInput = {
+        const where = {
             bookId,
             parentReviewId: null,
             ...(search && { comment: { contains: search, mode: Prisma.QueryMode.insensitive } })

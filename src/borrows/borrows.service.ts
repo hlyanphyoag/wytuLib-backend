@@ -57,7 +57,7 @@ export class BorrowsService {
         const skip = (page - 1) * limit;
         const take = Number(limit);
 
-        const where: Prisma.BorrowWhereInput = {
+        const where = {
             ...(userId && { userId }),
             ...(status && { status }),
             ...(borrowDate && { borrowDate }),

@@ -70,7 +70,7 @@ export class BooksService {
     const skip = (page - 1) * limit
     const take = Number(limit)
 
-    const where: Prisma.BookWhereInput = {
+    const where = {
       ...(status && { status }),
       ...(category && {
         OR: [

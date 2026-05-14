@@ -45,7 +45,7 @@ export class AuthorsService {
         const skip = (page - 1) * limit
         const take = Number(limit)
 
-        const where: Prisma.AuthorWhereInput = {
+        const where = {
             ...(search && {
                 OR: [
                     { id: { contains: search, mode: Prisma.QueryMode.insensitive } },

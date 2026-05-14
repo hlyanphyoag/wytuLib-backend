@@ -112,7 +112,7 @@ export class UsersService {
     const skip = (page - 1) * limit
     const take = Number(limit)
 
-    const where: Prisma.UserWhereInput = {
+    const where = {
       ...(role && { role }),
       ...(search && {
         OR: [
