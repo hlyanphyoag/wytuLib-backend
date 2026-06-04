@@ -131,6 +131,25 @@ export class AuthService {
     if (!isTokenValid) {
       throw new UnauthorizedException("Invalid refresh token")
     }
-    return this.signIn(user)
+
+    const username = user.firstName + " " + user.lastName
+    const tokenPayload = {
+      sub: user.id,
+      username,
+      role: user.role
+    }
+
+    const accessToken = await this.generateAccessToken(tokenPayload)
+
+    return {
+      accessToken,
+      refreshToken: oldRefreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        username,
+        role: user.role
+      }
+    }
   }
 }

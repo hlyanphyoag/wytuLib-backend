@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Res, Req, UseGuards, HttpStatus, HttpCode, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, HttpStatus, HttpCode, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthResponseDto, RefreshDto, RegisterDto, SignInDto } from './dto/auth.dto';
+import { AuthResponseDto, RegisterDto, SignInDto } from './dto/auth.dto';
 import * as express from 'express';
 import { Public } from 'src/decorators/public.decorator';
 import { CookieUtil } from 'src/libs/utils/cookie.util';
-import { ApiBasicAuth, ApiBearerAuth, ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiResponse } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -98,8 +98,10 @@ export class AuthController {
     @Req() request: express.Request,
     @Res({ passthrough: true }) response: express.Response
   ) {
-    const refreshToken = CookieUtil.getRefreshToken(request);
 
+    const refreshToken = CookieUtil.getRefreshToken(request);
+    console.log("Cookiesbackend:", request.cookies)
+    console.log("refreshToken:", refreshToken)
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
     }
