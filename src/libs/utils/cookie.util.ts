@@ -6,7 +6,7 @@ export class CookieUtil {
     private static readonly COOKIE_OPTIONS = {
         httpOnly: true,
         secure: false, // process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const, // or 'none' if frontend/back are different sites
+        sameSite: 'none' as const, // or 'none' if frontend/back are different sites
         maxAge: 7 * 24 * 60 * 60 * 1000,
     };
 
