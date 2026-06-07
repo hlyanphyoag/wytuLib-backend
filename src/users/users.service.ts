@@ -204,4 +204,33 @@ export class UsersService {
       message: 'Password changed successfully'
     }
   }
+  async verifyUser(userId: string, adminId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    if (user.isVerified) {
+      throw new BadRequestException('User is already verified')
+    }
+
+    const admin = await this.prisma.user.findUnique({
+      where: { id: adminId }
+    })
+
+    const verifiedByName = admin ? `${admin.firstName} ${admin.lastName}`.trim() : adminId
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isVerified: true,
+        verifiedBy: verifiedByName
+      }
+    })
+
+    return toDto(UserResponseDto, updatedUser)
+  }
 }

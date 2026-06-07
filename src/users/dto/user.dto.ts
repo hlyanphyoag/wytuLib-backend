@@ -118,6 +118,14 @@ export class UserResponseDto {
     @ApiProperty({ example: '1990-01-15', required: false, nullable: true })
     dateOfBirth?: Date | null;
 
+    @Expose()
+    @ApiProperty({ example: false })
+    isVerified: boolean;
+
+    @Expose()
+    @ApiProperty({ example: 'Admin User', required: false, nullable: true })
+    verifiedBy?: string | null;
+
     @Exclude()
     password: string;
 

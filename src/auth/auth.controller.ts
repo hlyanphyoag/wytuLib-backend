@@ -65,6 +65,8 @@ export class AuthController {
 
     const { accessToken, refreshToken, user } = await this.authService.authenticate(signInDto);
 
+    // console.log("Generated tokens - RefreshToken:", refreshToken)
+
     CookieUtil.setRefreshToken(response, refreshToken);
 
     return {
@@ -100,7 +102,7 @@ export class AuthController {
   ) {
 
     const refreshToken = CookieUtil.getRefreshToken(request);
-    console.log("Cookiesbackend:", request.cookies)
+    console.log("backendRefreshRouteHit:", request.cookies)
     console.log("refreshToken:", refreshToken)
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
