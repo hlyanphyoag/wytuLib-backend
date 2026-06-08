@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, OmitType } from "@nestjs/swagger";
 import { IsEmail, IsString, MinLength } from "class-validator";
 
 export class RegisterDto {
@@ -56,6 +56,17 @@ export class RegisterDto {
     @IsString()
     phone: string
 }
+
+export class CreateAdminDto extends OmitType(RegisterDto, ['studentId', 'phone'] as const) { 
+    @ApiProperty({
+        description: "User role",
+        example: "ADMIN",
+        required: true
+    })
+    @IsString()
+    role: "ADMIN"
+}
+
 
 export class SignInDto {
     @ApiProperty({

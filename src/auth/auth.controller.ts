@@ -1,10 +1,12 @@
-import { Controller, Post, Body, Res, Req, HttpStatus, HttpCode, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, HttpStatus, HttpCode, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthResponseDto, RegisterDto, SignInDto } from './dto/auth.dto';
+import { AuthResponseDto, CreateAdminDto, RegisterDto, SignInDto } from './dto/auth.dto';
 import * as express from 'express';
 import { Public } from 'src/decorators/public.decorator';
 import { CookieUtil } from 'src/libs/utils/cookie.util';
 import { ApiResponse } from '@nestjs/swagger';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { Role, Roles } from 'src/decorators/role.decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +42,27 @@ export class AuthController {
       accessToken,
       user
     }
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post("/create-admin")
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "User registered successfully",
+    type: AuthResponseDto,
+    headers: {
+      "Set-Cookie": {
+        schema: {
+          type: 'string',
+          example: 'refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict'
+        }
+      }
+    }
+  })
+  async createAdmin(@Body() createAdminDto: CreateAdminDto) {
+    return this.authService.register(createAdminDto)
   }
 
   @Public()
