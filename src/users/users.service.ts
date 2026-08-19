@@ -1,10 +1,11 @@
 import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { RegisterDto } from 'src/auth/dto/auth.dto';
+import { CreateAdminDto, RegisterDto } from 'src/auth/dto/auth.dto';
 import { ChangePasswordDto, GetUserDetailsResponse, GetUsersQueryDto, UpdateUserDto, UserResponseDto } from './dto/user.dto';
 import { toDto } from 'src/libs/utils/toDto';
 import * as bcrypt from 'bcrypt'
 import { BorrowStatus, Prisma } from '@prisma/client';
+import { Role } from 'src/decorators/role.decorators';
 
 @Injectable()
 export class UsersService {
@@ -27,7 +28,7 @@ export class UsersService {
   }
 
 
-  async createUser(createUserDto: RegisterDto) {
+  async createUser(createUserDto: RegisterDto | CreateAdminDto) {
 
 
     const user = await this.prisma.user.create({
@@ -109,7 +110,7 @@ export class UsersService {
   }
 
   async findAllUsers(query: GetUsersQueryDto) {
-    const { page = 1, limit = 10, sortBy = 'registeredAt', sortOrder = 'desc', search, role } = query
+    const { page = 1, limit = 10, sortBy = 'registeredAt', sortOrder = 'desc', search, role = Role.STUDENT } = query
 
     const skip = (page - 1) * limit
     const take = Number(limit)
@@ -203,5 +204,34 @@ export class UsersService {
       status: HttpStatus.OK,
       message: 'Password changed successfully'
     }
+  }
+  async verifyUser(userId: string, adminId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    if (user.isVerified) {
+      throw new BadRequestException('User is already verified')
+    }
+
+    const admin = await this.prisma.user.findUnique({
+      where: { id: adminId }
+    })
+
+    const verifiedByName = admin ? `${admin.firstName} ${admin.lastName}`.trim() : adminId
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isVerified: true,
+        verifiedBy: verifiedByName
+      }
+    })
+
+    return toDto(UserResponseDto, updatedUser)
   }
 }

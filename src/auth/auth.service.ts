@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { RegisterDto, SignInDto } from './dto/auth.dto';
+import { CreateAdminDto, RegisterDto, SignInDto } from './dto/auth.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt'
@@ -88,7 +88,7 @@ export class AuthService {
   }
 
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto | CreateAdminDto) {
     console.log("RegisterDTO:", registerDto)
     const existingUser = await this.userService.findUserByEmail(registerDto.email)
     if (existingUser) {

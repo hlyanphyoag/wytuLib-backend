@@ -59,6 +59,15 @@ export class UsersController {
     return this.usersService.findUserById(id)
   }
 
+  //Verify student by admin
+  @Post('student-verify/:id')
+  @Roles(Role.ADMIN)
+  @ApiResponse({ status: HttpStatus.OK, type: UserResponseDto, description: 'User verified successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async verifyUser(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.usersService.verifyUser(id, user.sub)
+  }
+
   // //Update user by admin
   // @Patch(':id')
   // @ApiResponse({ status: HttpStatus.OK, type: UserResponseDto })
