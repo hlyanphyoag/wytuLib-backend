@@ -25,7 +25,7 @@ export class ImageKitController {
         description: 'Image uploaded successfully',
         type: ImageKitUploadResponseDto
     })
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: Infinity } }))
     uploadFile(
         @UploadedFile(
             new ParseFilePipe({

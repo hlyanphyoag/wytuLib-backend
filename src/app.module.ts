@@ -17,6 +17,7 @@ import { AuthorsModule } from './authors/authors.module';
 import { CategoryModule } from './category/category.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { R2Module } from './r2/r2.module';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ScheduleModule.forRoot(),
     NotificationsModule,
     DashboardModule,
+    R2Module,
   ],
   controllers: [AppController],
   providers: [
